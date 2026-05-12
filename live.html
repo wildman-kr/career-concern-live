@@ -61,10 +61,8 @@
 
     if (!error && data) {
       activeQuestionId = data.id;
-
       document.querySelector('h1').innerText = '실시간 응답';
       document.querySelector('p').innerText = data.question_text;
-
       loadResponses();
     }
   }
@@ -84,7 +82,6 @@
 
   function addResponseCard(item) {
     const container = document.getElementById('responses');
-
     const card = document.createElement('div');
     card.className = 'response-card';
 
@@ -101,7 +98,7 @@
   loadActiveQuestion();
 
   client
-    .channel('responses-channel')
+    .channel('live-responses-channel')
     .on(
       'postgres_changes',
       {
@@ -113,6 +110,21 @@
         if (payload.new.question_id === activeQuestionId) {
           addResponseCard(payload.new);
         }
+      }
+    )
+    .subscribe();
+
+  client
+    .channel('live-questions-channel')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'questions'
+      },
+      () => {
+        loadActiveQuestion();
       }
     )
     .subscribe();
