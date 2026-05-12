@@ -101,6 +101,22 @@
   }
 
   loadActiveQuestion();
+    client
+  .channel('student-questions-channel')
+  .on(
+    'postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'questions'
+    },
+    () => {
+      loadActiveQuestion();
+      document.getElementById('response').value = '';
+      document.getElementById('message').innerText = '';
+    }
+  )
+  .subscribe();
 </script>
 
 </body>
