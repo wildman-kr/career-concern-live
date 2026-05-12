@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Career Concern Live</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 20px;
+      color: green;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>진로 고민 입력</h1>
+
+  <p>현재 가장 고민되는 진로 문제를 적어주세요.</p>
+
+  <textarea id="response"></textarea>
+
+  <button onclick="submitResponse()">제출</button>
+
+  <div id="message"></div>
+
+  <script>
+    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co/';
+    const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
+
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function submitResponse() {
+
+      const responseText =
+        document.getElementById('response').value;
+
+      const { error } =
+        await client
+          .from('responses')
+          .insert([
+            {
+              room_code: 'TEST101',
+              response_text: responseText
+            }
+          ]);
+
+      if (error) {
+        document.getElementById('message').innerText =
+          '오류 발생';
+      } else {
+        document.getElementById('message').innerText =
+          '제출 완료!';
+        document.getElementById('response').value = '';
+      }
+    }
+  </script>
+
+</body>
+</html>
