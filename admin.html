@@ -28,6 +28,27 @@
       font-size: 15px;
       cursor: pointer;
       margin-top: 8px;
+      margin-right: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .danger {
+      background: #dc2626;
+      color: white;
+      border: none;
+    }
+
+    .warning {
+      background: #f97316;
+      color: white;
+      border: none;
+    }
+
+    .primary {
+      background: #111827;
+      color: white;
+      border: none;
     }
 
     .question-card {
@@ -45,20 +66,29 @@
     .status {
       font-size: 14px;
       margin-top: 8px;
+      margin-bottom: 8px;
       color: green;
+      font-weight: bold;
+    }
+
+    .question-text {
+      font-size: 20px;
+      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
   <h1>관리자 화면</h1>
-      <button onclick="deleteActiveQuestionResponses()" style="background:#dc2626; color:white;">
-      현재 질문 응답 전체 삭제
-      </button>
+
+  <button class="danger" onclick="deleteActiveQuestionResponses()">
+    현재 ON 질문 응답 전체 삭제
+  </button>
+
   <h2>질문 만들기</h2>
   <textarea id="questionText" placeholder="학생들에게 보여줄 질문을 입력하세요."></textarea>
   <br>
-  <button onclick="createQuestion()">질문 추가</button>
+  <button class="primary" onclick="createQuestion()">질문 추가</button>
 
   <h2>질문 목록</h2>
   <p>ON으로 선택한 질문이 학생 화면과 실시간 화면에 표시됩니다.</p>
@@ -66,7 +96,7 @@
   <div id="questions"></div>
 
   <script>
-    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co/';
+    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
     const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
 
     const client = supabase.createClient(supabaseUrl, supabaseKey);
@@ -116,9 +146,20 @@
         card.className = 'question-card' + (q.is_active ? ' active' : '');
 
         card.innerHTML = `
-          <div style="font-size:20px; line-height:1.5;">${q.question_text}</div>
+          <div class="question-text">${q.question_text}</div>
           <div class="status">${q.is_active ? '현재 ON' : 'OFF'}</div>
-          <button onclick="activateQuestion(${q.id})">이 질문 ON</button>
+
+          <button class="primary" onclick="activateQuestion(${q.id})">
+            이 질문 ON
+          </button>
+
+          <button class="warning" onclick="deleteQuestionResponses(${q.id})">
+            이 질문 응답 삭제
+          </button>
+
+          <button class="danger" onclick="deleteQuestion(${q.id})">
+            질문 삭제
+          </button>
         `;
 
         container.appendChild(card);
@@ -144,35 +185,78 @@
       }
     }
 
+    async function deleteActiveQuestionResponses() {
+      const ok = confirm('현재 ON 되어 있는 질문의 응답을 모두 삭제할까요?');
+
+      if (!ok) return;
+
+      const { data: activeQuestion, error: questionError } = await client
+        .from('questions')
+        .select('*')
+        .eq('is_active', true)
+        .single();
+
+      if (questionError || !activeQuestion) {
+        alert('현재 ON 질문을 찾을 수 없습니다.');
+        return;
+      }
+
+      const { error } = await client
+        .from('responses')
+        .delete()
+        .eq('question_id', activeQuestion.id);
+
+      if (error) {
+        alert('응답 삭제 중 오류가 발생했습니다.');
+        console.error(error);
+      } else {
+        alert('현재 ON 질문의 응답을 모두 삭제했습니다.');
+      }
+    }
+
+    async function deleteQuestionResponses(questionId) {
+      const ok = confirm('이 질문에 달린 응답만 모두 삭제할까요?');
+
+      if (!ok) return;
+
+      const { error } = await client
+        .from('responses')
+        .delete()
+        .eq('question_id', questionId);
+
+      if (error) {
+        alert('응답 삭제 중 오류가 발생했습니다.');
+        console.error(error);
+      } else {
+        alert('이 질문의 응답을 모두 삭제했습니다.');
+      }
+    }
+
+    async function deleteQuestion(questionId) {
+      const ok = confirm('이 질문을 삭제할까요? 연결된 응답도 함께 삭제됩니다.');
+
+      if (!ok) return;
+
+      await client
+        .from('responses')
+        .delete()
+        .eq('question_id', questionId);
+
+      const { error } = await client
+        .from('questions')
+        .delete()
+        .eq('id', questionId);
+
+      if (error) {
+        alert('질문 삭제 중 오류가 발생했습니다.');
+        console.error(error);
+      } else {
+        alert('질문을 삭제했습니다.');
+        loadQuestions();
+      }
+    }
+
     loadQuestions();
-  async function deleteActiveQuestionResponses() {
-  const ok = confirm('현재 ON 되어 있는 질문의 응답을 모두 삭제할까요?');
-
-  if (!ok) return;
-
-  const { data: activeQuestion, error: questionError } = await client
-    .from('questions')
-    .select('*')
-    .eq('is_active', true)
-    .single();
-
-  if (questionError || !activeQuestion) {
-    alert('현재 ON 질문을 찾을 수 없습니다.');
-    return;
-  }
-
-  const { error } = await client
-    .from('responses')
-    .delete()
-    .eq('question_id', activeQuestion.id);
-
-  if (error) {
-    alert('응답 삭제 중 오류가 발생했습니다.');
-    console.error(error);
-  } else {
-    alert('현재 질문의 응답을 모두 삭제했습니다.');
-  }
-}
   </script>
 </body>
 </html>
