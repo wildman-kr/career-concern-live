@@ -52,7 +52,9 @@
 
 <body>
   <h1>관리자 화면</h1>
-
+      <button onclick="deleteActiveQuestionResponses()" style="background:#dc2626; color:white;">
+      현재 질문 응답 전체 삭제
+      </button>
   <h2>질문 만들기</h2>
   <textarea id="questionText" placeholder="학생들에게 보여줄 질문을 입력하세요."></textarea>
   <br>
@@ -143,6 +145,34 @@
     }
 
     loadQuestions();
+  async function deleteActiveQuestionResponses() {
+  const ok = confirm('현재 ON 되어 있는 질문의 응답을 모두 삭제할까요?');
+
+  if (!ok) return;
+
+  const { data: activeQuestion, error: questionError } = await client
+    .from('questions')
+    .select('*')
+    .eq('is_active', true)
+    .single();
+
+  if (questionError || !activeQuestion) {
+    alert('현재 ON 질문을 찾을 수 없습니다.');
+    return;
+  }
+
+  const { error } = await client
+    .from('responses')
+    .delete()
+    .eq('question_id', activeQuestion.id);
+
+  if (error) {
+    alert('응답 삭제 중 오류가 발생했습니다.');
+    console.error(error);
+  } else {
+    alert('현재 질문의 응답을 모두 삭제했습니다.');
+  }
+}
   </script>
 </body>
 </html>
