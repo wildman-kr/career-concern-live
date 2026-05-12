@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Career Concern Live - 응답 보기</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    h1 {
+      font-size: 32px;
+    }
+
+    .response-card {
+      background: white;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 22px;
+      line-height: 1.5;
+    }
+
+    .time {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>실시간 진로 고민 응답</h1>
+  <p>학생들이 제출한 응답이 실시간으로 표시됩니다.</p>
+
+  <div id="responses"></div>
+
+  <script>
+    const supabaseUrl = '여기에_PROJECT_URL';
+    const supabaseKey = '여기에_ANON_PUBLIC_KEY';
+
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+    const roomCode = 'TEST101';
+
+    async function loadResponses() {
+      const { data, error } = await client
+        .from('responses')
+        .select('*')
+        .eq('room_code', roomCode)
+        .order('created_at', { ascending: false });
+
+      if (!error) {
+        document.getElementById('responses').innerHTML = '';
+        data.forEach(addResponseCard);
+      }
+    }
+
+    function addResponseCard(item) {
+      const container = document.getElementById('responses');
+
+      const card = document.createElement('div');
+      card.className = 'response-card';
+
+      const time = new Date(item.created_at).toLocaleTimeString('ko-KR');
+
+      card.innerHTML = `
+        <div>${item.response_text}</div>
+        <div class="time">${time}</div>
+      `;
+
+      container.prepend(card);
+    }
+
+    loadResponses();
+
+    client
+      .channel('responses-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'responses',
+          filter: 'room_code=eq.TEST101'
+        },
+        (payload) => {
+          addResponseCard(payload.new);
+        }
+      )
+      .subscribe();
+  </script>
+</body>
+</html>
