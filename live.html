@@ -45,58 +45,77 @@
   <div id="responses"></div>
 
   <script>
-    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co/';
-    const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
+  const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
+  const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
 
-    const client = supabase.createClient(supabaseUrl, supabaseKey);
-    const roomCode = 'TEST101';
+  const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function loadResponses() {
-      const { data, error } = await client
-        .from('responses')
-        .select('*')
-        .eq('room_code', roomCode)
-        .order('created_at', { ascending: false });
+  let activeQuestionId = null;
 
-      if (!error) {
-        document.getElementById('responses').innerHTML = '';
-        data.forEach(addResponseCard);
-      }
+  async function loadActiveQuestion() {
+    const { data, error } = await client
+      .from('questions')
+      .select('*')
+      .eq('is_active', true)
+      .single();
+
+    if (!error && data) {
+      activeQuestionId = data.id;
+
+      document.querySelector('h1').innerText = '실시간 응답';
+      document.querySelector('p').innerText = data.question_text;
+
+      loadResponses();
     }
+  }
 
-    function addResponseCard(item) {
-      const container = document.getElementById('responses');
+  async function loadResponses() {
+    const { data, error } = await client
+      .from('responses')
+      .select('*')
+      .eq('question_id', activeQuestionId)
+      .order('created_at', { ascending: false });
 
-      const card = document.createElement('div');
-      card.className = 'response-card';
-
-      const time = new Date(item.created_at).toLocaleTimeString('ko-KR');
-
-      card.innerHTML = `
-        <div>${item.response_text}</div>
-        <div class="time">${time}</div>
-      `;
-
-      container.prepend(card);
+    if (!error) {
+      document.getElementById('responses').innerHTML = '';
+      data.forEach(addResponseCard);
     }
+  }
 
-    loadResponses();
+  function addResponseCard(item) {
+    const container = document.getElementById('responses');
 
-    client
-      .channel('responses-channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'responses',
-          filter: 'room_code=eq.TEST101'
-        },
-        (payload) => {
+    const card = document.createElement('div');
+    card.className = 'response-card';
+
+    const time = new Date(item.created_at).toLocaleTimeString('ko-KR');
+
+    card.innerHTML = `
+      <div>${item.response_text}</div>
+      <div class="time">${time}</div>
+    `;
+
+    container.prepend(card);
+  }
+
+  loadActiveQuestion();
+
+  client
+    .channel('responses-channel')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'responses'
+      },
+      (payload) => {
+        if (payload.new.question_id === activeQuestionId) {
           addResponseCard(payload.new);
         }
-      )
-      .subscribe();
-  </script>
+      }
+    )
+    .subscribe();
+</script>
 </body>
 </html>
