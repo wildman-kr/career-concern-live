@@ -3,131 +3,304 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Career Concern Live - 응답 보기</title>
+  <title>Career Concern Live</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #f7f7f7;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, #475569 0, transparent 35%),
+        linear-gradient(135deg, #0f172a, #111827 55%, #020617);
+      color: #f8fafc;
+      min-height: 100vh;
+      overflow: hidden;
     }
 
-    h1 {
-      font-size: 32px;
+    .slide {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 28px;
+      height: 100vh;
+      padding: 32px;
     }
 
-    .response-card {
+    .side {
+      border-radius: 28px;
+      padding: 28px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .label {
+      font-size: 14px;
+      letter-spacing: 0.16em;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    .question {
+      margin-top: 18px;
+      font-size: 25px;
+      line-height: 1.42;
+      font-weight: 800;
+      word-break: keep-all;
+    }
+
+    .qr-box {
+      margin-top: 28px;
+      text-align: center;
+    }
+
+    .qr-box img {
+      width: 210px;
+      height: 210px;
+      padding: 12px;
+      border-radius: 22px;
       background: white;
-      padding: 18px 20px;
-      margin-bottom: 14px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      font-size: 22px;
+    }
+
+    .qr-box p {
+      font-size: 15px;
+      color: #e2e8f0;
       line-height: 1.5;
     }
 
+    .url {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #94a3b8;
+      word-break: break-all;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 22px;
+    }
+
+    .title {
+      font-size: 42px;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.04em;
+    }
+
+    .count {
+      font-size: 18px;
+      color: #cbd5e1;
+    }
+
+    #responses {
+      overflow-y: auto;
+      padding-right: 8px;
+      height: calc(100vh - 130px);
+    }
+
+    .response-card {
+      background: rgba(255,255,255,0.93);
+      color: #0f172a;
+      padding: 24px 28px;
+      margin-bottom: 18px;
+      border-radius: 24px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+      font-size: 28px;
+      line-height: 1.45;
+      font-weight: 650;
+      animation: fadeUp 0.35s ease both;
+    }
+
     .time {
-      margin-top: 8px;
-      font-size: 13px;
-      color: #777;
+      margin-top: 12px;
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 800px) {
+      body {
+        overflow: auto;
+      }
+
+      .slide {
+        grid-template-columns: 1fr;
+        height: auto;
+        padding: 18px;
+      }
+
+      #responses {
+        height: auto;
+      }
+
+      .title {
+        font-size: 32px;
+      }
+
+      .response-card {
+        font-size: 21px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>실시간 진로 고민 응답</h1>
-  <p>학생들이 제출한 응답이 실시간으로 표시됩니다.</p>
+  <div class="slide">
+    <aside class="side">
+      <div>
+        <div class="label">CAREER LIVE</div>
+        <div class="question" id="questionText">
+          질문을 불러오는 중입니다...
+        </div>
+      </div>
 
-  <div id="responses"></div>
+      <div class="qr-box">
+        <p>스마트폰으로 QR을 스캔해<br>익명으로 응답하세요.</p>
+
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=https://wildman-kr.github.io/career-concern-live/"
+          alt="학생 접속 QR 코드"
+        />
+
+        <div class="url">
+          wildman-kr.github.io/career-concern-live
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1 class="title">실시간 응답</h1>
+        <div class="count">
+          <span id="responseCount">0</span> responses
+        </div>
+      </div>
+
+      <div id="responses"></div>
+    </main>
+  </div>
 
   <script>
-  const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
-  const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
+    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
+    const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
 
-  const client = supabase.createClient(supabaseUrl, supabaseKey);
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-  let activeQuestionId = null;
+    let activeQuestionId = null;
 
-  async function loadActiveQuestion() {
-    const { data, error } = await client
-      .from('questions')
-      .select('*')
-      .eq('is_active', true)
-      .single();
+    async function loadActiveQuestion() {
+      const { data, error } = await client
+        .from('questions')
+        .select('*')
+        .eq('is_active', true)
+        .single();
 
-    if (!error && data) {
-      activeQuestionId = data.id;
-      document.querySelector('h1').innerText = '실시간 응답';
-      document.querySelector('p').innerText = data.question_text;
-      loadResponses();
+      if (!error && data) {
+        activeQuestionId = data.id;
+
+        document.getElementById('questionText').innerText =
+          data.question_text;
+
+        loadResponses();
+      }
     }
-  }
 
-  async function loadResponses() {
-    const { data, error } = await client
-      .from('responses')
-      .select('*')
-      .eq('question_id', activeQuestionId)
-      .order('created_at', { ascending: false });
+    async function loadResponses() {
+      const { data, error } = await client
+        .from('responses')
+        .select('*')
+        .eq('question_id', activeQuestionId)
+        .order('created_at', { ascending: false });
 
-    if (!error) {
-      document.getElementById('responses').innerHTML = '';
-      data.forEach(addResponseCard);
+      if (!error) {
+        document.getElementById('responses').innerHTML = '';
+        data.forEach(addResponseCard);
+        updateCount();
+      }
     }
-  }
 
-  function addResponseCard(item) {
-    const container = document.getElementById('responses');
-    const card = document.createElement('div');
-    card.className = 'response-card';
+    function addResponseCard(item) {
+      const container = document.getElementById('responses');
 
-    const time = new Date(item.created_at).toLocaleTimeString('ko-KR');
+      const card = document.createElement('div');
+      card.className = 'response-card';
 
-    card.innerHTML = `
-      <div>${item.response_text}</div>
-      <div class="time">${time}</div>
-    `;
+      const time = new Date(item.created_at).toLocaleTimeString('ko-KR');
 
-    container.prepend(card);
-  }
+      card.innerHTML = `
+        <div>${item.response_text}</div>
+        <div class="time">${time}</div>
+      `;
 
-  loadActiveQuestion();
+      container.prepend(card);
+      updateCount();
+    }
 
-  client
-    .channel('live-responses-channel')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'responses'
-      },
-      (payload) => {
-        if (payload.new.question_id === activeQuestionId) {
-          addResponseCard(payload.new);
+    function updateCount() {
+      const count = document.querySelectorAll('.response-card').length;
+      document.getElementById('responseCount').innerText = count;
+    }
+
+    loadActiveQuestion();
+
+    client
+      .channel('live-responses-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'responses'
+        },
+        (payload) => {
+          if (payload.new.question_id === activeQuestionId) {
+            addResponseCard(payload.new);
+          }
         }
-      }
-    )
-    .subscribe();
+      )
+      .subscribe();
 
-  client
-    .channel('live-questions-channel')
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'questions'
-      },
-      () => {
-        loadActiveQuestion();
-      }
-    )
-    .subscribe();
-</script>
+    client
+      .channel('live-questions-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'questions'
+        },
+        () => {
+          loadActiveQuestion();
+        }
+      )
+      .subscribe();
+  </script>
 </body>
 </html>
