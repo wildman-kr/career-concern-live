@@ -79,28 +79,90 @@
 </head>
 
 <body>
-  <h1>관리자 화면</h1>
 
-  <button class="danger" onclick="deleteActiveQuestionResponses()">
-    현재 ON 질문 응답 전체 삭제
-  </button>
+  <div id="loginScreen">
+    <h1>관리자 로그인</h1>
 
-  <h2>질문 만들기</h2>
-  <textarea id="questionText" placeholder="학생들에게 보여줄 질문을 입력하세요."></textarea>
-  <br>
-  <button class="primary" onclick="createQuestion()">질문 추가</button>
+    <input
+      type="password"
+      id="passwordInput"
+      placeholder="비밀번호 입력"
+      style="
+        padding:12px;
+        font-size:18px;
+        width:300px;
+      "
+    />
 
-  <h2>질문 목록</h2>
-  <p>ON으로 선택한 질문이 학생 화면과 실시간 화면에 표시됩니다.</p>
+    <br><br>
 
-  <div id="questions"></div>
+    <button onclick="checkPassword()">
+      로그인
+    </button>
+
+    <p id="loginMessage" style="color:red;"></p>
+  </div>
+
+  <div id="adminContent" style="display:none;">
+
+    <h1>관리자 화면</h1>
+
+    <button class="danger" onclick="deleteActiveQuestionResponses()">
+      현재 ON 질문 응답 전체 삭제
+    </button>
+
+    <h2>질문 만들기</h2>
+
+    <textarea
+      id="questionText"
+      placeholder="학생들에게 보여줄 질문을 입력하세요."
+    ></textarea>
+
+    <br>
+
+    <button class="primary" onclick="createQuestion()">
+      질문 추가
+    </button>
+
+    <h2>질문 목록</h2>
+
+    <p>
+      ON으로 선택한 질문이 학생 화면과 실시간 화면에 표시됩니다.
+    </p>
+
+    <div id="questions"></div>
+
+  </div>
 
   <script>
+    const ADMIN_PASSWORD = '32901123';
     const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
     const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
 
     const client = supabase.createClient(supabaseUrl, supabaseKey);
 
+    function checkPassword() {
+
+  const input =
+    document.getElementById('passwordInput').value;
+
+  if (input === ADMIN_PASSWORD) {
+
+    document.getElementById('loginScreen').style.display =
+      'none';
+
+    document.getElementById('adminContent').style.display =
+      'block';
+
+    loadQuestions();
+
+  } else {
+
+    document.getElementById('loginMessage').innerText =
+      '비밀번호가 올바르지 않습니다.';
+  }
+}
+    
     async function createQuestion() {
       const questionText = document.getElementById('questionText').value.trim();
 
@@ -256,7 +318,7 @@
       }
     }
 
-    loadQuestions();
+   
   </script>
 </body>
 </html>
