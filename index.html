@@ -40,7 +40,7 @@
 
   <h1>진로 고민 입력</h1>
 
-  <p>현재 가장 고민되는 진로 문제를 적어주세요.</p>
+  <p id="questionText"></p>
 
   <textarea id="response"></textarea>
 
@@ -49,36 +49,59 @@
   <div id="message"></div>
 
   <script>
-    const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co/';
-    const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
+  const supabaseUrl = 'https://jhvniiyolcxavyjlewfh.supabase.co';
+  const supabaseKey = 'sb_publishable_ajdFyMp1gqAwWD0R6SAwFA_f1yA3FBj';
 
-    const client = supabase.createClient(supabaseUrl, supabaseKey);
+  const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function submitResponse() {
+  async function loadActiveQuestion() {
+    const { data, error } = await client
+      .from('questions')
+      .select('*')
+      .eq('is_active', true)
+      .single();
 
-      const responseText =
-        document.getElementById('response').value;
+    if (!error && data) {
+      document.getElementById('questionText').innerText =
+        data.question_text;
 
-      const { error } =
-        await client
-          .from('responses')
-          .insert([
-            {
-              room_code: 'TEST101',
-              response_text: responseText
-            }
-          ]);
-
-      if (error) {
-        document.getElementById('message').innerText =
-          '오류 발생';
-      } else {
-        document.getElementById('message').innerText =
-          '제출 완료!';
-        document.getElementById('response').value = '';
-      }
+      window.activeQuestionId = data.id;
     }
-  </script>
+  }
+
+  async function submitResponse() {
+    const responseText =
+      document.getElementById('response').value.trim();
+
+    if (!responseText) {
+      document.getElementById('message').innerText =
+        '응답을 입력해주세요.';
+      return;
+    }
+
+    const { error } = await client
+      .from('responses')
+      .insert([
+        {
+          room_code: 'TEST101',
+          response_text: responseText,
+          question_id: window.activeQuestionId
+        }
+      ]);
+
+    if (error) {
+      document.getElementById('message').innerText =
+        '오류 발생';
+      console.error(error);
+    } else {
+      document.getElementById('message').innerText =
+        '제출 완료!';
+      document.getElementById('response').value = '';
+    }
+  }
+
+  loadActiveQuestion();
+</script>
 
 </body>
 </html>
